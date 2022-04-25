@@ -49,6 +49,8 @@ def get_output_path(path, in_dir, out_dir):
     if sort_by_last_folder:
         last_folder = path_str.split('/')[len(path_str.split('/'))-2:][0]
         filename = os.path.basename(path)
+        if filename.endswith(".png"):
+            filename = filename[:-4] + ".jpg"
         return os.path.join(out_dir, last_folder, filename)
     else:
         return path_str.replace(in_dir, out_dir)
@@ -118,17 +120,20 @@ def delete_files(files):
 
 
 def process_all(in_dir, out_dir, verbose=True):
-    # If we want to read multiple file types: https://stackoverflow.com/questions/4568580/python-glob-multiple-filetypes
-    img_files = Path(in_dir).rglob('*.jpg')
+    extensions = {'.jpg', '.png'}
+    img_files = Path(in_dir).rglob(r'**/*')
 
     num_processed = 0
     start = time.time()
     for img_path in img_files:
+        if img_path.suffix not in extensions:
+            continue
         #file_name = os.path.basename(img_path)
         img = Image.open(img_path)
         processed_img = process_img(img)
         if processed_img == None:
             # Skip
+            img.close()
             continue
 
         # Compute output path
@@ -142,6 +147,7 @@ def process_all(in_dir, out_dir, verbose=True):
         num_processed += 1
         if verbose and num_processed % print_every == 0:
             print(num_processed, "images processed")
+        img.close()
     end = time.time()
 
     print("Processed " + str(num_processed) +

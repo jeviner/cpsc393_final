@@ -14,12 +14,16 @@ def get_last_folder(path):
     return path.split('/')[len(path.split('/'))-2:][0]
     
 def generate_data():
-    img_files = Path(data_dir).rglob('*.jpg')
+    extensions = {'.jpg', '.png'}
+    img_files = Path(data_dir).rglob(r'**/*')
     all_data = []
     all_labels = []
+    found = 0
     
     start = time.time()
     for img_path in img_files:
+        if img_path.suffix not in extensions:
+            continue
         img_data = image.imread(img_path)
         
         # Calculate label
@@ -37,8 +41,9 @@ def generate_data():
         
         all_data.append(img_data)
         all_labels.append(label)
+        found += 1
     end = time.time()
-    print("Created a dataset of", len(all_data), "images in", str(round(end - start, 2)) + "s")
+    print("Created a dataset of", found, "images in", str(round(end - start, 2)) + "s")
     data_arr = np.array(all_data)
     labels_arr = np.array(all_labels)
     np.savez(save_to, data_arr, labels_arr)
